@@ -1,4 +1,4 @@
-package edu.ingsis.demo.permissions.dtos
+package edu.ingsis.permission.permissions.dtos
 
 data class PermissionDTO(
     val userId: Long,

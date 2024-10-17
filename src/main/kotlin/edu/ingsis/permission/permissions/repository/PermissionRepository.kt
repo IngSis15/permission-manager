@@ -1,10 +1,12 @@
-package edu.ingsis.demo.permissions.repository
+package edu.ingsis.permission.permissions.repository
 
-import edu.ingsis.demo.permissions.model.Permission
-import edu.ingsis.demo.permissions.model.PermissionType
+import edu.ingsis.permission.permissions.model.Permission
+import edu.ingsis.permission.permissions.model.PermissionType
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
 
-interface PermissionRepository : JpaRepository<Permission, Long> {
+@Repository
+interface PermissionRepository : JpaRepository<Permission, String> {
 
     fun findByUserId(userId: Long): List<Permission>
 

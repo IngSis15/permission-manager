@@ -9,3 +9,9 @@ spring:
     username: ${DB_USERNAME:admin}
     password: ${DB_PASSWORD:example}
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:demo}
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

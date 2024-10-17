@@ -1,4 +1,4 @@
-package edu.ingsis.demo.health
+package edu.ingsis.permission.health
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping

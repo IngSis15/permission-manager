@@ -1,9 +1,9 @@
-package edu.ingsis.demo.permissions.controller
+package edu.ingsis.permission.permissions.controller
 
-import edu.ingsis.demo.permissions.dtos.PermissionDTO
-import edu.ingsis.demo.permissions.dtos.PermissionResponseDTO
-import edu.ingsis.demo.permissions.model.Permission
-import edu.ingsis.demo.permissions.service.PermissionService
+import edu.ingsis.permission.permissions.dtos.PermissionDTO
+import edu.ingsis.permission.permissions.dtos.PermissionResponseDTO
+import edu.ingsis.permission.permissions.model.Permission
+import edu.ingsis.permission.permissions.service.PermissionService
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -13,6 +13,18 @@ class PermissionController(private val permissionService: PermissionService) {
     @PostMapping("/assign")
     fun assignPermission(@RequestBody permissionDTO: PermissionDTO): PermissionResponseDTO {
         val permission = permissionService.assignPermission(permissionDTO)
+        return toPermissionResponseDTO(permission)
+    }
+
+    @DeleteMapping("/user/{userId}/snippet/{snippetId}")
+    fun removePermission(@PathVariable("userId") userId : Long, @PathVariable("snippetId") snippetId: Long): PermissionResponseDTO {
+        val permission = permissionService.removePermission(userId, snippetId)
+        return toPermissionResponseDTO(permission)
+    }
+
+    @PatchMapping("/user/{userId}/snippet/{snippetId}/update/{permissionType}")
+    fun updatePermission(@PathVariable("userId") userId : Long, @PathVariable("snippetId") snippetId: Long, @PathVariable("permissionType") permissionType: String): PermissionResponseDTO {
+        val permission = permissionService.updatePermission(userId, snippetId, permissionType)
         return toPermissionResponseDTO(permission)
     }
 
@@ -58,6 +70,12 @@ class PermissionController(private val permissionService: PermissionService) {
     @GetMapping("/all/snippet/{snippetId}")
     fun getAllPermissionsBySnippetId(@PathVariable snippetId: Long): List<PermissionResponseDTO> {
         return permissionService.getAllPermissionsBySnippetId(snippetId).map { toPermissionResponseDTO(it) }
+    }
+
+    @GetMapping("/owner/{snippetId}")
+    fun getOwnerBySnippetId(@PathVariable snippetId: Long): PermissionResponseDTO {
+        val permission = permissionService.getOwnerBySnippetId(snippetId)
+        return toPermissionResponseDTO(permission)
     }
 
     private fun toPermissionResponseDTO(permission: Permission): PermissionResponseDTO {
