@@ -9,37 +9,32 @@ object PermissionFixtures {
             Permission(
                 userId = 1,
                 snippetId = 1,
-                permissionType = PermissionType.OWNER
-            )
-            ,
+                permissionType = PermissionType.OWNER,
+            ),
             Permission(
                 userId = 2,
                 snippetId = 1,
-                permissionType = PermissionType.DEV
-            )
-            ,
+                permissionType = PermissionType.DEV,
+            ),
             Permission(
                 userId = 3,
                 snippetId = 1,
-                permissionType = PermissionType.ADMIN
-            )
-            ,
+                permissionType = PermissionType.ADMIN,
+            ),
             Permission(
                 userId = 1,
                 snippetId = 2,
-                permissionType = PermissionType.VIEWER
-            )
-            ,
+                permissionType = PermissionType.VIEWER,
+            ),
             Permission(
                 userId = 2,
                 snippetId = 2,
-                permissionType = PermissionType.VIEWER
-            )
-            ,
+                permissionType = PermissionType.VIEWER,
+            ),
             Permission(
                 userId = 1,
                 snippetId = 3,
-                permissionType = PermissionType.DEV
-            )
+                permissionType = PermissionType.DEV,
+            ),
         )
 }

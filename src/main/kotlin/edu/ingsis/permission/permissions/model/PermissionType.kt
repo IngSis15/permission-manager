@@ -4,5 +4,5 @@ enum class PermissionType {
     OWNER,
     DEV,
     ADMIN,
-    VIEWER
+    VIEWER,
 }
