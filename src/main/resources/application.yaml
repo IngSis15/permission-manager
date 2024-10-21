@@ -3,12 +3,25 @@ server:
 
 spring:
   application:
-    name: Demo
+    name: Permission Manager
   datasource:
     driver-class-name: org.postgresql.Driver
     username: ${DB_USERNAME:admin}
     password: ${DB_PASSWORD:example}
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:demo}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:permission-manager}
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AUTH_SERVER_URI}
+          client-id: ${AUTH_CLIENT_ID}
+          client-secret: ${AUTH_CLIENT_SECRET}
+
+auth0:
+  audience: ${AUTH0_AUDIENCE}
 
 springdoc:
   api-docs:
