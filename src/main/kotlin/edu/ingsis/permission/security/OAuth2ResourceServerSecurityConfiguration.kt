@@ -3,7 +3,10 @@ package edu.ingsis.permission.security
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpMethod.*
+import org.springframework.http.HttpMethod.DELETE
+import org.springframework.http.HttpMethod.GET
+import org.springframework.http.HttpMethod.PATCH
+import org.springframework.http.HttpMethod.POST
 import org.springframework.security.config.Customizer.withDefaults
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -39,7 +42,6 @@ class OAuth2ResourceServerSecurityConfiguration(
             .csrf { it.disable() }
         return http.build()
     }
-
 
     @Bean
     fun jwtDecoder(): JwtDecoder {
