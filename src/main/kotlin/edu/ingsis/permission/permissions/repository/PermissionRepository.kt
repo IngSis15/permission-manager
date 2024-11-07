@@ -7,16 +7,16 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface PermissionRepository : JpaRepository<Permission, String> {
-    fun findByUserId(userId: Long): List<Permission>
+    fun findByUserId(userId: String): List<Permission>
 
     fun findBySnippetId(snippetId: Long): List<Permission>
 
     fun findByUserIdAndSnippetId(
-        userId: Long,
+        userId: String,
         snippetId: Long,
     ): Permission?
 
-    fun findAllByUserId(userId: Long): List<Permission>
+    fun findAllByUserId(userId: String): List<Permission>
 
     fun findAllBySnippetId(snippetId: Long): List<Permission>
 
@@ -26,7 +26,7 @@ interface PermissionRepository : JpaRepository<Permission, String> {
     ): List<Permission>
 
     fun findAllByUserIdAndPermissionType(
-        userId: Long,
+        userId: String,
         permissionType: PermissionType,
     ): List<Permission>
 }

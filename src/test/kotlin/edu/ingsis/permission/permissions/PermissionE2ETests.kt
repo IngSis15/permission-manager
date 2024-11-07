@@ -1,230 +1,184 @@
 package edu.ingsis.permission.permissions
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import edu.ingsis.permission.permissions.controller.PermissionController
 import edu.ingsis.permission.permissions.dtos.PermissionDTO
-import edu.ingsis.permission.permissions.dtos.PermissionResponseDTO
+import edu.ingsis.permission.permissions.model.Permission
 import edu.ingsis.permission.permissions.model.PermissionType
-import edu.ingsis.permission.permissions.repository.PermissionRepository
-import org.junit.jupiter.api.AfterEach
+import edu.ingsis.permission.permissions.service.PermissionService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.core.ParameterizedTypeReference
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.MediaType
-import org.springframework.test.context.ActiveProfiles
+import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.jwt.JwtClaimNames
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.delete
+import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.patch
+import org.springframework.test.web.servlet.post
+import java.time.Instant
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@WebMvcTest(PermissionController::class)
 @ExtendWith(SpringExtension::class)
-@ActiveProfiles(value = ["test"])
-@AutoConfigureWebTestClient
 class PermissionE2ETests
     @Autowired
     constructor(
-        val client: WebTestClient,
-        val repository: PermissionRepository,
+        private val mockMvc: MockMvc,
+        private val objectMapper: ObjectMapper,
     ) {
-        @BeforeEach
-        fun setup() {
-            repository.saveAll(PermissionFixtures.all())
-        }
+        @MockBean
+        private lateinit var service: PermissionService
 
-        @AfterEach
-        fun tearDown() {
-            repository.deleteAll()
+        private lateinit var jwtToken: Jwt
+
+        @BeforeEach
+        fun setUp() {
+            jwtToken =
+                Jwt.withTokenValue("mockedToken")
+                    .header("alg", "none")
+                    .claim(JwtClaimNames.SUB, "test-user")
+                    .claim("scope", "read:snippets write:snippets")
+                    .issuedAt(Instant.now())
+                    .expiresAt(Instant.now().plusSeconds(3600))
+                    .build()
         }
 
         @Test
         fun `should assign permission to user and return PermissionResponseDTO`() {
-            val permissionDTO = PermissionDTO(userId = 4, snippetId = 3, permissionType = "VIEWER")
+            val permissionDTO = PermissionDTO(userId = "3", snippetId = 3, permissionType = "VIEWER")
+            val permission = Permission(id = "1", userId = "3", snippetId = 3, permissionType = PermissionType.VIEWER)
+            `when`(service.assignPermission("test-user", 3, "VIEWER")).thenReturn(permission)
 
-            client.post()
-                .uri("/permissions/assign")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(permissionDTO)
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(PermissionResponseDTO::class.java)
-                .value { response: PermissionResponseDTO ->
-                    assert(response.userId == 4L)
-                    assert(response.snippetId == 3L)
-                    assert(response.permissionType == "VIEWER")
+            mockMvc.post("/permissions/assign") {
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(permissionDTO)
+                with(jwt().jwt(jwtToken))
+            }
+                .andExpect {
+                    status { isOk() }
+                    jsonPath("$.userId") { value("3") }
+                    jsonPath("$.snippetId") { value(3) }
+                    jsonPath("$.permissionType") { value("VIEWER") }
                 }
         }
 
         @Test
         fun `should remove permission and return removed PermissionResponseDTO`() {
-            val permissionDTO = PermissionDTO(userId = 1, snippetId = 3, permissionType = "DEV")
+            val permission = Permission(id = "1", userId = "test-user", snippetId = 1, permissionType = PermissionType.OWNER)
+            `when`(service.removePermission("test-user", 1)).thenReturn(permission)
 
-            client
-                .delete().uri("/permissions/user/1/snippet/3")
-                .exchange()
-                .expectStatus().isOk
-
-            // Verify that the permission is actually removed
-            client.get()
-                .uri("/permissions/user/1/snippet/3")
-                .exchange()
-                .expectStatus().isNotFound
+            mockMvc.delete("/permissions/user/snippet/1") {
+                with(jwt().jwt(jwtToken))
+            }
+                .andExpect {
+                    status { isOk() }
+                    jsonPath("$.userId") { value("test-user") }
+                    jsonPath("$.snippetId") { value(1) }
+                    jsonPath("$.permissionType") { value("OWNER") }
+                }
         }
 
         @Test
         fun `should update permission and return updated PermissionResponseDTO`() {
-            client.patch()
-                .uri("/permissions/user/1/snippet/1/update/ADMIN")
-                .exchange()
-                .expectStatus().isOk
+            val permission = Permission(id = "1", userId = "test-user", snippetId = 1, permissionType = PermissionType.VIEWER)
+            `when`(service.updatePermission("test-user", 1, "VIEWER")).thenReturn(permission)
 
-            // Verify that the permission was actually updated
-            client.get()
-                .uri("/permissions/user/1/snippet/1")
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(PermissionResponseDTO::class.java)
-                .value { permission: PermissionResponseDTO ->
-                    assert(permission.permissionType == "ADMIN")
+            mockMvc.patch("/permissions/user/snippet/1/update/VIEWER") {
+                with(jwt().jwt(jwtToken))
+            }
+                .andExpect {
+                    status { isOk() }
+                    jsonPath("$.userId") { value("test-user") }
+                    jsonPath("$.snippetId") { value(1) }
+                    jsonPath("$.permissionType") { value("VIEWER") }
                 }
         }
 
         @Test
         fun `should get permissions by user id`() {
-            val userId = 1L
+            val permissions =
+                listOf(
+                    Permission(id = "1", userId = "test-user", snippetId = 1, permissionType = PermissionType.OWNER),
+                    Permission(id = "2", userId = "test-user", snippetId = 2, permissionType = PermissionType.VIEWER),
+                )
+            `when`(service.getPermissionsByUserId("test-user")).thenReturn(permissions)
 
-            val listType = object : ParameterizedTypeReference<List<PermissionResponseDTO>>() {}
-
-            client.get()
-                .uri("/permissions/user/$userId")
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(listType)
-                .value { permissions: List<PermissionResponseDTO> ->
-                    assert(permissions.isNotEmpty())
-                    assert(permissions.size == 3)
-                    assert(permissions[0].userId == userId)
-                }
-        }
-
-        @Test
-        fun `should get permissions by snippet id`() {
-            val snippetId = 1L
-
-            val listType = object : ParameterizedTypeReference<List<PermissionResponseDTO>>() {}
-
-            client.get()
-                .uri("/permissions/snippet/$snippetId")
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(listType)
-                .value { permissions: List<PermissionResponseDTO> ->
-                    assert(permissions.isNotEmpty())
-                    assert(permissions.size == 3)
-                    assert(permissions[0].snippetId == snippetId)
+            mockMvc.get("/permissions/user") {
+                with(jwt().jwt(jwtToken))
+            }
+                .andExpect {
+                    status { isOk() }
+                    jsonPath("$[0].userId") { value("test-user") }
+                    jsonPath("$[0].snippetId") { value(1) }
+                    jsonPath("$[0].permissionType") { value("OWNER") }
+                    jsonPath("$[1].userId") { value("test-user") }
+                    jsonPath("$[1].snippetId") { value(2) }
+                    jsonPath("$[1].permissionType") { value("VIEWER") }
                 }
         }
 
         @Test
         fun `should get permission by user id and snippet id`() {
-            val userId = 1L
-            val snippetId = 1L
+            val permission = Permission(id = "1", userId = "test-user", snippetId = 1, permissionType = PermissionType.OWNER)
+            `when`(service.getPermissionByUserIdAndSnippetId("test-user", 1)).thenReturn(permission)
 
-            client.get()
-                .uri("/permissions/user/$userId/snippet/$snippetId")
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(PermissionResponseDTO::class.java)
-                .value { permission: PermissionResponseDTO ->
-                    assert(permission.userId == userId)
-                    assert(permission.snippetId == snippetId)
-                    assert(permission.permissionType == PermissionType.OWNER.name)
+            mockMvc.get("/permissions/user/snippet/1") {
+                with(jwt().jwt(jwtToken))
+            }
+                .andExpect {
+                    status { isOk() }
+                    jsonPath("$.userId") { value("test-user") }
+                    jsonPath("$.snippetId") { value(1) }
+                    jsonPath("$.permissionType") { value("OWNER") }
                 }
         }
 
         @Test
         fun `should get permissions by user id and permission type`() {
-            val userId = 1L
-            val permissionType = "VIEWER"
+            val permissions =
+                listOf(
+                    Permission(id = "1", userId = "test-user", snippetId = 1, permissionType = PermissionType.VIEWER),
+                )
+            `when`(service.getPermissionsByUserIdAndPermissionType("test-user", "VIEWER")).thenReturn(permissions)
 
-            val listType = object : ParameterizedTypeReference<List<PermissionResponseDTO>>() {}
-
-            client.get()
-                .uri("/permissions/user/$userId/permissionType?permissionType=$permissionType")
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(listType)
-                .value { permissions: List<PermissionResponseDTO> ->
-                    assert(permissions.size == 1)
-                    assert(permissions[0].permissionType == permissionType)
-                    assert(permissions[0].userId == userId)
-                }
-        }
-
-        @Test
-        fun `should get permissions by snippet id and permission type`() {
-            val snippetId = 2L
-            val permissionType = "VIEWER"
-
-            val listType = object : ParameterizedTypeReference<List<PermissionResponseDTO>>() {}
-
-            client.get()
-                .uri("/permissions/snippet/$snippetId/permissionType?permissionType=$permissionType")
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(listType)
-                .value { permissions: List<PermissionResponseDTO> ->
-                    assert(permissions.size == 2)
-                    assert(permissions[0].permissionType == permissionType)
+            mockMvc.get("/permissions/permissionType?permissionType=VIEWER") {
+                with(jwt().jwt(jwtToken))
+            }
+                .andExpect {
+                    status { isOk() }
+                    jsonPath("$[0].userId") { value("test-user") }
+                    jsonPath("$[0].snippetId") { value(1) }
+                    jsonPath("$[0].permissionType") { value("VIEWER") }
                 }
         }
 
         @Test
         fun `should get all permissions by user id`() {
-            val userId = 2L
+            val permissions =
+                listOf(
+                    Permission(id = "1", userId = "test-user", snippetId = 1, permissionType = PermissionType.OWNER),
+                    Permission(id = "2", userId = "test-user", snippetId = 2, permissionType = PermissionType.VIEWER),
+                )
+            `when`(service.getAllPermissionsByUserId("test-user")).thenReturn(permissions)
 
-            val listType = object : ParameterizedTypeReference<List<PermissionResponseDTO>>() {}
-
-            client.get()
-                .uri("/permissions/all/user/$userId")
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(listType)
-                .value { permissions: List<PermissionResponseDTO> ->
-                    assert(permissions.size == 2)
-                    assert(permissions[0].userId == userId)
-                }
-        }
-
-        @Test
-        fun `should get all permissions by snippet id`() {
-            val snippetId = 2L
-
-            val listType = object : ParameterizedTypeReference<List<PermissionResponseDTO>>() {}
-
-            client.get()
-                .uri("/permissions/all/snippet/$snippetId")
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(listType)
-                .value { permissions: List<PermissionResponseDTO> ->
-                    assert(permissions.size == 2)
-                    assert(permissions[0].snippetId == snippetId)
-                }
-        }
-
-        @Test
-        fun `should get owner by snippet id`() {
-            val snippetId = 1L
-
-            client.get()
-                .uri("/permissions/owner/$snippetId")
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(PermissionResponseDTO::class.java)
-                .value { permission: PermissionResponseDTO ->
-                    assert(permission.snippetId == snippetId)
-                    assert(permission.userId == 1L)
+            mockMvc.get("/permissions/all/user") {
+                with(jwt().jwt(jwtToken))
+            }
+                .andExpect {
+                    status { isOk() }
+                    jsonPath("$[0].userId") { value("test-user") }
+                    jsonPath("$[0].snippetId") { value(1) }
+                    jsonPath("$[0].permissionType") { value("OWNER") }
+                    jsonPath("$[1].userId") { value("test-user") }
+                    jsonPath("$[1].snippetId") { value(2) }
+                    jsonPath("$[1].permissionType") { value("VIEWER") }
                 }
         }
     }

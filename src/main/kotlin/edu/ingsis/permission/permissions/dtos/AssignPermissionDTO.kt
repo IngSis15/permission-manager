@@ -1,8 +1,6 @@
 package edu.ingsis.permission.permissions.dtos
 
-data class PermissionResponseDTO(
-    val id: String,
-    val userId: String,
+data class AssignPermissionDTO(
     val snippetId: Long,
     val permissionType: String,
 )

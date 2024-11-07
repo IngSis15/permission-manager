@@ -12,7 +12,7 @@ data class Permission(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     val id: String? = null,
-    private val userId: Long,
+    private val userId: String,
     private val snippetId: Long,
     @Enumerated(EnumType.STRING)
     private val permissionType: PermissionType,
