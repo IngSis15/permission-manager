@@ -1,6 +1,5 @@
 package edu.ingsis.permission.permissions.service
 
-import edu.ingsis.permission.permissions.dtos.PermissionDTO
 import edu.ingsis.permission.permissions.model.Permission
 import edu.ingsis.permission.permissions.model.PermissionType
 import edu.ingsis.permission.permissions.repository.PermissionRepository
@@ -10,18 +9,22 @@ import org.springframework.web.server.ResponseStatusException
 
 @Service
 class PermissionService(private val permissionRepository: PermissionRepository) {
-    fun assignPermission(permissionDTO: PermissionDTO): Permission {
+    fun assignPermission(
+        userId: String,
+        snippetId: Long,
+        permissionType: String,
+    ): Permission {
         val permission =
             Permission(
-                userId = permissionDTO.userId,
-                snippetId = permissionDTO.snippetId,
-                permissionType = PermissionType.valueOf(permissionDTO.permissionType),
+                userId = userId,
+                snippetId = snippetId,
+                permissionType = permissionType.let { PermissionType.valueOf(it) },
             )
         return permissionRepository.save(permission) // The ID will be automatically generated
     }
 
     fun removePermission(
-        userId: Long,
+        userId: String,
         snippetId: Long,
     ): Permission {
         val permission = permissionRepository.findByUserIdAndSnippetId(userId, snippetId)
@@ -34,7 +37,7 @@ class PermissionService(private val permissionRepository: PermissionRepository) 
     }
 
     fun updatePermission(
-        userId: Long,
+        userId: String,
         snippetId: Long,
         permissionType: String,
     ): Permission {
@@ -52,7 +55,7 @@ class PermissionService(private val permissionRepository: PermissionRepository) 
         throw Exception("Permission not found")
     }
 
-    fun getPermissionsByUserId(userId: Long): List<Permission> {
+    fun getPermissionsByUserId(userId: String): List<Permission> {
         return permissionRepository.findByUserId(userId)
     }
 
@@ -61,7 +64,7 @@ class PermissionService(private val permissionRepository: PermissionRepository) 
     }
 
     fun getPermissionByUserIdAndSnippetId(
-        userId: Long,
+        userId: String,
         snippetId: Long,
     ): Permission? {
         val permission: Permission? = permissionRepository.findByUserIdAndSnippetId(userId, snippetId)
@@ -72,7 +75,7 @@ class PermissionService(private val permissionRepository: PermissionRepository) 
     }
 
     fun getPermissionsByUserIdAndPermissionType(
-        userId: Long,
+        userId: String,
         permissionType: String,
     ): List<Permission> {
         return permissionRepository.findAllByUserIdAndPermissionType(userId, PermissionType.valueOf(permissionType))
@@ -85,7 +88,7 @@ class PermissionService(private val permissionRepository: PermissionRepository) 
         return permissionRepository.findAllBySnippetIdAndPermissionType(snippetId, PermissionType.valueOf(permissionType))
     }
 
-    fun getAllPermissionsByUserId(userId: Long): List<Permission> {
+    fun getAllPermissionsByUserId(userId: String): List<Permission> {
         return permissionRepository.findAllByUserId(userId)
     }
 
