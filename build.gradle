@@ -1,9 +1,13 @@
+import org.springframework.boot.gradle.tasks.run.BootRun
+
 plugins {
 	id 'org.jetbrains.kotlin.jvm' version '1.9.25'
 	id 'org.jetbrains.kotlin.plugin.spring' version '1.9.25'
 	id 'org.springframework.boot' version '3.3.4'
 	id 'io.spring.dependency-management' version '1.1.6'
 	id 'org.jetbrains.kotlin.plugin.jpa' version '1.9.25'
+
+    id 'org.jlleitschuh.gradle.ktlint' version '12.1.1'
 }
 
 group = 'edu.ingsis'
@@ -37,6 +41,12 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-api:2.6.0"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0"
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    testImplementation 'org.springframework.security:spring-security-test'
 }
 
 kotlin {
@@ -46,5 +56,22 @@ kotlin {
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
+
+tasks.register('copyPreCommitHook', Copy) {
+    description = "Copy pre-commit git hook from the scripts to the .git/hooks folder."
+    group = "git hooks"
+    from "hooks/pre-commit"
+    into ".git/hooks"
+    doLast {
+        def hookFile = file('.git/hooks/pre-commit')
+        if (hookFile.exists()) {
+            hookFile.setExecutable(true)
+        }
+    }
+}
+
+tasks.build.dependsOn copyPreCommitHook
+
+
