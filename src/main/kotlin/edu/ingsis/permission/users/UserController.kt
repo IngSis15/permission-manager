@@ -9,9 +9,11 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/users")
-class UserController @Autowired constructor(val userService: UserService) {
-    @GetMapping()
-    fun getUsers(): ResponseEntity<List<UserDto>> {
-        return ResponseEntity.ok(userService.getAllUsers().block())
+class UserController
+    @Autowired
+    constructor(val userService: UserService) {
+        @GetMapping()
+        fun getUsers(): ResponseEntity<List<UserDto>> {
+            return ResponseEntity.ok(userService.getAllUsers().block())
+        }
     }
-}
