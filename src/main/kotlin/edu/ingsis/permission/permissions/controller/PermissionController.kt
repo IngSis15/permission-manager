@@ -4,6 +4,7 @@ import edu.ingsis.permission.permissions.dtos.AssignPermissionDTO
 import edu.ingsis.permission.permissions.dtos.PermissionResponseDTO
 import edu.ingsis.permission.permissions.model.Permission
 import edu.ingsis.permission.permissions.service.PermissionService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -18,14 +19,15 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/permissions")
-class PermissionController(private val permissionService: PermissionService) {
+class PermissionController @Autowired constructor(private val permissionService: PermissionService) {
     @PostMapping("/assign")
     fun assignPermission(
         @RequestBody permissionDTO: AssignPermissionDTO,
         @AuthenticationPrincipal jwt: Jwt,
     ): PermissionResponseDTO {
         val userId = jwt.subject
-        val permission = permissionService.assignPermission(userId, permissionDTO.snippetId, permissionDTO.permissionType)
+        val permission =
+            permissionService.assignPermission(userId, permissionDTO.snippetId, permissionDTO.permissionType)
         return toPermissionResponseDTO(permission)
     }
 
@@ -71,7 +73,8 @@ class PermissionController(private val permissionService: PermissionService) {
         @AuthenticationPrincipal jwt: Jwt,
     ): PermissionResponseDTO? {
         val userId = jwt.subject
-        return permissionService.getPermissionByUserIdAndSnippetId(userId, snippetId)?.let { toPermissionResponseDTO(it) }
+        return permissionService.getPermissionByUserIdAndSnippetId(userId, snippetId)
+            ?.let { toPermissionResponseDTO(it) }
     }
 
     @GetMapping("/permissionType")
@@ -80,7 +83,8 @@ class PermissionController(private val permissionService: PermissionService) {
         @AuthenticationPrincipal jwt: Jwt,
     ): List<PermissionResponseDTO> {
         val userId = jwt.subject
-        return permissionService.getPermissionsByUserIdAndPermissionType(userId, permissionType).map { toPermissionResponseDTO(it) }
+        return permissionService.getPermissionsByUserIdAndPermissionType(userId, permissionType)
+            .map { toPermissionResponseDTO(it) }
     }
 
     @GetMapping("/snippet/{snippetId}/permissionType")
@@ -88,7 +92,8 @@ class PermissionController(private val permissionService: PermissionService) {
         @PathVariable snippetId: Long,
         @RequestParam permissionType: String,
     ): List<PermissionResponseDTO> {
-        return permissionService.getPermissionsBySnippetIdAndPermissionType(snippetId, permissionType).map { toPermissionResponseDTO(it) }
+        return permissionService.getPermissionsBySnippetIdAndPermissionType(snippetId, permissionType)
+            .map { toPermissionResponseDTO(it) }
     }
 
     @GetMapping("/all/user")
