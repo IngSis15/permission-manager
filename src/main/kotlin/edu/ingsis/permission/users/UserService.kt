@@ -85,4 +85,25 @@ class UserService(
             false // Token is invalid
         }
     }
+
+    fun getUsernameFromUserId(userId: String): Mono<String> {
+        return validateAndRefreshTokenIfNeeded()
+            .flatMap { validToken ->
+                WebClient.builder()
+                    .baseUrl("$audience/api/v2/users/$userId")
+                    .defaultHeader("Authorization", "Bearer $validToken")
+                    .defaultHeader("Accept", "application/json")
+                    .build()
+                    .get()
+                    .retrieve()
+                    .bodyToMono(String::class.java)
+                    .map { responseJson ->
+                        val objectMapper = ObjectMapper()
+                        val jsonNode: JsonNode = objectMapper.readTree(responseJson)
+                        jsonNode["name"]?.asText() ?: throw ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Username not found for user ID $userId",
+                        )
+                    }
+            }
+    }
 }

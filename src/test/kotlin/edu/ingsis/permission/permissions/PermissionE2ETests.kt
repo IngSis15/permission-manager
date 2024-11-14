@@ -3,6 +3,7 @@ package edu.ingsis.permission.permissions
 import com.fasterxml.jackson.databind.ObjectMapper
 import edu.ingsis.permission.permissions.controller.PermissionController
 import edu.ingsis.permission.permissions.dtos.PermissionDTO
+import edu.ingsis.permission.permissions.dtos.PermissionResponseDTO
 import edu.ingsis.permission.permissions.model.Permission
 import edu.ingsis.permission.permissions.model.PermissionType
 import edu.ingsis.permission.permissions.service.PermissionService
@@ -53,8 +54,11 @@ class PermissionE2ETests
         @Test
         fun `should assign permission to user and return PermissionResponseDTO`() {
             val permissionDTO = PermissionDTO(userId = "3", snippetId = 3, permissionType = "VIEWER")
-            val permission = Permission(id = "1", userId = "3", snippetId = 3, permissionType = PermissionType.VIEWER)
-            `when`(service.assignPermission("test-user", 3, "VIEWER")).thenReturn(permission)
+            val permission =
+                Permission(id = "1", userId = "3", snippetId = 3, permissionType = PermissionType.VIEWER, username = "test-user")
+            val permissionResponseDTO =
+                PermissionResponseDTO(id = "1", userId = "3", snippetId = 3, permissionType = "VIEWER", username = "test-user")
+            `when`(service.assignPermission("test-user", 3, "VIEWER")).thenReturn(permissionResponseDTO)
 
             mockMvc.post("/permissions/assign") {
                 contentType = MediaType.APPLICATION_JSON
@@ -71,8 +75,11 @@ class PermissionE2ETests
 
         @Test
         fun `should remove permission and return removed PermissionResponseDTO`() {
-            val permission = Permission(id = "1", userId = "test-user", snippetId = 1, permissionType = PermissionType.OWNER)
-            `when`(service.removePermission("test-user", 1)).thenReturn(permission)
+            val permission =
+                Permission(id = "1", userId = "test-user", snippetId = 1, permissionType = PermissionType.OWNER, username = "test-user")
+            val permissionResponseDTO =
+                PermissionResponseDTO(id = "1", userId = "test-user", snippetId = 1, permissionType = "OWNER", username = "test-user")
+            `when`(service.removePermission("test-user", 1)).thenReturn(permissionResponseDTO)
 
             mockMvc.delete("/permissions/user/snippet/1") {
                 with(jwt().jwt(jwtToken))
@@ -87,8 +94,11 @@ class PermissionE2ETests
 
         @Test
         fun `should update permission and return updated PermissionResponseDTO`() {
-            val permission = Permission(id = "1", userId = "test-user", snippetId = 1, permissionType = PermissionType.VIEWER)
-            `when`(service.updatePermission("test-user", 1, "VIEWER")).thenReturn(permission)
+            val permission =
+                Permission(id = "1", userId = "test-user", snippetId = 1, permissionType = PermissionType.VIEWER, username = "test-user")
+            val permissionResponseDTO =
+                PermissionResponseDTO(id = "1", userId = "test-user", snippetId = 1, permissionType = "VIEWER", username = "test-user")
+            `when`(service.updatePermission("test-user", 1, "VIEWER")).thenReturn(permissionResponseDTO)
 
             mockMvc.patch("/permissions/user/snippet/1/update/VIEWER") {
                 with(jwt().jwt(jwtToken))
@@ -105,10 +115,33 @@ class PermissionE2ETests
         fun `should get permissions by user id`() {
             val permissions =
                 listOf(
-                    Permission(id = "1", userId = "test-user", snippetId = 1, permissionType = PermissionType.OWNER),
-                    Permission(id = "2", userId = "test-user", snippetId = 2, permissionType = PermissionType.VIEWER),
+                    Permission(
+                        id = "1",
+                        userId = "test-user",
+                        snippetId = 1,
+                        permissionType = PermissionType.OWNER,
+                        username = "test-user",
+                    ),
+                    Permission(
+                        id = "2",
+                        userId = "test-user",
+                        snippetId = 2,
+                        permissionType = PermissionType.VIEWER,
+                        username = "test-user",
+                    ),
                 )
-            `when`(service.getPermissionsByUserId("test-user")).thenReturn(permissions)
+
+            val permissionDtos =
+                permissions.map {
+                    PermissionResponseDTO(
+                        id = it.id!!,
+                        userId = it.getUserId(),
+                        snippetId = it.getSnippetId(),
+                        permissionType = it.getPermissionType().toString(),
+                        username = it.getUsername(),
+                    )
+                }
+            `when`(service.getPermissionsByUserId("test-user")).thenReturn(permissionDtos)
 
             mockMvc.get("/permissions/user") {
                 with(jwt().jwt(jwtToken))
@@ -126,8 +159,11 @@ class PermissionE2ETests
 
         @Test
         fun `should get permission by user id and snippet id`() {
-            val permission = Permission(id = "1", userId = "test-user", snippetId = 1, permissionType = PermissionType.OWNER)
-            `when`(service.getPermissionByUserIdAndSnippetId("test-user", 1)).thenReturn(permission)
+            val permission =
+                Permission(id = "1", userId = "test-user", snippetId = 1, permissionType = PermissionType.OWNER, username = "test-user")
+            val permissionResponseDTO =
+                PermissionResponseDTO(id = "1", userId = "test-user", snippetId = 1, permissionType = "OWNER", username = "test-user")
+            `when`(service.getPermissionByUserIdAndSnippetId("test-user", 1)).thenReturn(permissionResponseDTO)
 
             mockMvc.get("/permissions/user/snippet/1") {
                 with(jwt().jwt(jwtToken))
@@ -144,9 +180,26 @@ class PermissionE2ETests
         fun `should get permissions by user id and permission type`() {
             val permissions =
                 listOf(
-                    Permission(id = "1", userId = "test-user", snippetId = 1, permissionType = PermissionType.VIEWER),
+                    Permission(
+                        id = "1",
+                        userId = "test-user",
+                        snippetId = 1,
+                        permissionType = PermissionType.VIEWER,
+                        username = "test-user",
+                    ),
                 )
-            `when`(service.getPermissionsByUserIdAndPermissionType("test-user", "VIEWER")).thenReturn(permissions)
+
+            val permissionDtos =
+                permissions.map {
+                    PermissionResponseDTO(
+                        id = it.id!!,
+                        userId = it.getUserId(),
+                        snippetId = it.getSnippetId(),
+                        permissionType = it.getPermissionType().toString(),
+                        username = it.getUsername(),
+                    )
+                }
+            `when`(service.getPermissionsByUserIdAndPermissionType("test-user", "VIEWER")).thenReturn(permissionDtos)
 
             mockMvc.get("/permissions/permissionType?permissionType=VIEWER") {
                 with(jwt().jwt(jwtToken))
@@ -163,12 +216,36 @@ class PermissionE2ETests
         fun `should get all permissions by user id`() {
             val permissions =
                 listOf(
-                    Permission(id = "1", userId = "test-user", snippetId = 1, permissionType = PermissionType.OWNER),
-                    Permission(id = "2", userId = "test-user", snippetId = 2, permissionType = PermissionType.VIEWER),
+                    Permission(
+                        id = "1",
+                        userId = "test-user",
+                        snippetId = 1,
+                        permissionType = PermissionType.OWNER,
+                        username = "test-user",
+                    ),
+                    Permission(
+                        id = "2",
+                        userId = "test-user",
+                        snippetId = 2,
+                        permissionType = PermissionType.VIEWER,
+                        username = "test-user",
+                    ),
                 )
-            `when`(service.getAllPermissionsByUserId("test-user")).thenReturn(permissions)
 
-            mockMvc.get("/permissions/all/user") {
+            val permissionDtos =
+                permissions.map {
+                    PermissionResponseDTO(
+                        id = it.id!!,
+                        userId = it.getUserId(),
+                        snippetId = it.getSnippetId(),
+                        permissionType = it.getPermissionType().toString(),
+                        username = it.getUsername(),
+                    )
+                }
+
+            `when`(service.getPermissionsByUserId("test-user")).thenReturn(permissionDtos)
+
+            mockMvc.get("/permissions/user") {
                 with(jwt().jwt(jwtToken))
             }
                 .andExpect {
