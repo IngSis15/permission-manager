@@ -1,9 +1,13 @@
-# Spring Boot Starter
+# Permission Manager
 
-This "starter" is a place where you can see how to do basic things in Spring like:
-- Inject dependencies
-- E2E Tests
-- Spring profiles
-- Environment Variables in Spring Configuration
+Service of the Snippet Searcher project that manages snippet permissions.
 
-This is supposed to be a "live" starter so things may change in the feature.
+## How to use?
+1. Copy the content of .env.example to a new file called .env and fill the variables with the correct values.
+2. Start docker container with the following command:
+
+```bash
+docker compose up
+```
+
+3. Go to the following URL to access the Swagger UI: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui-html)
