@@ -14,6 +14,7 @@ data class Permission(
     val id: String? = null,
     private val userId: String,
     private val snippetId: Long,
+    private val username: String,
     @Enumerated(EnumType.STRING)
     private val permissionType: PermissionType,
 ) {
@@ -22,4 +23,6 @@ data class Permission(
     fun getSnippetId() = snippetId
 
     fun getPermissionType() = permissionType
+
+    fun getUsername() = username
 }

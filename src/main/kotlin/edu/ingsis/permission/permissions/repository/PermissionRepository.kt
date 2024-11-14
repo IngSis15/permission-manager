@@ -29,4 +29,9 @@ interface PermissionRepository : JpaRepository<Permission, String> {
         userId: String,
         permissionType: PermissionType,
     ): List<Permission>
+
+    fun existsBySnippetIdAndPermissionType(
+        snippetId: Long,
+        permissionType: PermissionType,
+    ): Boolean
 }
