@@ -91,7 +91,7 @@ class PermissionService(private val permissionRepository: PermissionRepository, 
                 userId = it.getUserId(),
                 snippetId = it.getSnippetId(),
                 permissionType = it.getPermissionType().toString(),
-                username = it.getUsername(),
+                username = getOwnerBySnippetId(it.getSnippetId()).username,
             )
         }
     }
