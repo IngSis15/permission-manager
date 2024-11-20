@@ -24,11 +24,13 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 # Copy the built jar from the builder stage
-COPY --from=builder /app/build/libs/demo-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=builder /app/build/libs/*.jar app.jar
 
+COPY ./newrelic/newrelic.jar /app/newrelic/newrelic.jar
+COPY ./newrelic/newrelic.yml /app/newrelic/newrelic.yml
 
 # Expose the application port
 EXPOSE 8080
 
 # Run the Spring Boot application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-javaagent:/app/newrelic/newrelic.jar", "-jar", "app.jar"]
