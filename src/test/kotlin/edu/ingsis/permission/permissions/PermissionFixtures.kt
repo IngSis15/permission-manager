@@ -7,25 +7,25 @@ object PermissionFixtures {
     fun all(): List<Permission> =
         listOf(
             Permission(
-                userId = "1",
+                userId = "test-user",
                 snippetId = 1,
                 permissionType = PermissionType.OWNER,
                 username = "user1",
             ),
             Permission(
-                userId = "2",
+                userId = "test-other-user",
                 snippetId = 1,
                 permissionType = PermissionType.VIEWER,
                 username = "user2",
             ),
             Permission(
-                userId = "1",
+                userId = "test-user",
                 snippetId = 2,
                 permissionType = PermissionType.VIEWER,
                 username = "user1",
             ),
             Permission(
-                userId = "2",
+                userId = "test-other-user",
                 snippetId = 2,
                 permissionType = PermissionType.OWNER,
                 username = "user2",
