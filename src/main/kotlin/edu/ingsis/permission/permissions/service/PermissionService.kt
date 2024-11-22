@@ -25,12 +25,12 @@ class PermissionService(private val permissionRepository: PermissionRepository, 
             Permission(
                 userId = userId,
                 snippetId = snippetId,
-                permissionType = permissionType.let { PermissionType.valueOf(it) },
+                permissionType = PermissionType.valueOf(permissionType),
                 username = username.block()!!,
             )
-        permissionRepository.save(permission)
+        val savedPermission = permissionRepository.save(permission)
         return PermissionResponseDTO(
-            id = permission.id!!,
+            id = savedPermission.id!!,
             userId = permission.getUserId(),
             snippetId = permission.getSnippetId(),
             permissionType = permission.getPermissionType().toString(),
@@ -56,34 +56,6 @@ class PermissionService(private val permissionRepository: PermissionRepository, 
         throw Exception("Permission not found")
     }
 
-    fun updatePermission(
-        userId: String,
-        snippetId: Long,
-        permissionType: String,
-    ): PermissionResponseDTO {
-        val permission = permissionRepository.findByUserIdAndSnippetId(userId, snippetId)
-        val username = userService.getUsernameFromUserId(userId)
-        if (permission != null) {
-            permissionRepository.delete(permission)
-            val newPermission =
-                Permission(
-                    userId = userId,
-                    snippetId = snippetId,
-                    permissionType = PermissionType.valueOf(permissionType),
-                    username = username.block()!!,
-                )
-            permissionRepository.save(newPermission)
-            return PermissionResponseDTO(
-                id = newPermission.id!!,
-                userId = newPermission.getUserId(),
-                snippetId = newPermission.getSnippetId(),
-                permissionType = newPermission.getPermissionType().toString(),
-                username = newPermission.getUsername(),
-            )
-        }
-        throw Exception("Permission not found")
-    }
-
     fun getPermissionsByUserId(userId: String): List<PermissionResponseDTO> {
         return permissionRepository.findAllByUserId(userId).map {
             PermissionResponseDTO(
@@ -92,18 +64,6 @@ class PermissionService(private val permissionRepository: PermissionRepository, 
                 snippetId = it.getSnippetId(),
                 permissionType = it.getPermissionType().toString(),
                 username = getOwnerBySnippetId(it.getSnippetId()).username,
-            )
-        }
-    }
-
-    fun getPermissionsBySnippetId(snippetId: Long): List<PermissionResponseDTO> {
-        return permissionRepository.findBySnippetId(snippetId).map {
-            PermissionResponseDTO(
-                id = it.id!!,
-                userId = it.getUserId(),
-                snippetId = it.getSnippetId(),
-                permissionType = it.getPermissionType().toString(),
-                username = it.getUsername(),
             )
         }
     }
@@ -140,34 +100,6 @@ class PermissionService(private val permissionRepository: PermissionRepository, 
         }
     }
 
-    fun getPermissionsBySnippetIdAndPermissionType(
-        snippetId: Long,
-        permissionType: String,
-    ): List<PermissionResponseDTO> {
-        val permissions = permissionRepository.findAllBySnippetIdAndPermissionType(snippetId, PermissionType.valueOf(permissionType))
-        return permissions.map {
-            PermissionResponseDTO(
-                id = it.id!!,
-                userId = it.getUserId(),
-                snippetId = it.getSnippetId(),
-                permissionType = it.getPermissionType().toString(),
-                username = it.getUsername(),
-            )
-        }
-    }
-
-    fun getAllPermissionsBySnippetId(snippetId: Long): List<PermissionResponseDTO> {
-        return permissionRepository.findBySnippetId(snippetId).map {
-            PermissionResponseDTO(
-                id = it.id!!,
-                userId = it.getUserId(),
-                snippetId = it.getSnippetId(),
-                permissionType = it.getPermissionType().toString(),
-                username = it.getUsername(),
-            )
-        }
-    }
-
     fun getOwnerBySnippetId(snippetId: Long): PermissionResponseDTO {
         val permission = permissionRepository.findAllBySnippetIdAndPermissionType(snippetId, PermissionType.OWNER).firstOrNull()
         if (permission != null) {
@@ -180,18 +112,6 @@ class PermissionService(private val permissionRepository: PermissionRepository, 
             )
         }
         throw ResponseStatusException(HttpStatus.NOT_FOUND, "Owner not found")
-    }
-
-    fun getOwnedByUserId(userId: String): List<PermissionResponseDTO> {
-        return permissionRepository.findAllByUserIdAndPermissionType(userId, PermissionType.OWNER).map {
-            PermissionResponseDTO(
-                id = it.id!!,
-                userId = it.getUserId(),
-                snippetId = it.getSnippetId(),
-                permissionType = it.getPermissionType().toString(),
-                username = it.getUsername(),
-            )
-        }
     }
 
     fun hasOwner(snippetId: Long): Boolean {
