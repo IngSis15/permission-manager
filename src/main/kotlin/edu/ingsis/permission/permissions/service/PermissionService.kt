@@ -5,12 +5,11 @@ import edu.ingsis.permission.permissions.model.Permission
 import edu.ingsis.permission.permissions.model.PermissionType
 import edu.ingsis.permission.permissions.repository.PermissionRepository
 import edu.ingsis.permission.users.UserService
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
-
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 @Service
 class PermissionService(private val permissionRepository: PermissionRepository, private val userService: UserService) {

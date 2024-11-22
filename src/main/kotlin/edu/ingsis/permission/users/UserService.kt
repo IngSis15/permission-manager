@@ -20,7 +20,6 @@ class UserService(
     @Value("\${spring.security.oauth2.resourceserver.jwt.issuer-uri}") val audience: String,
     private val jwtDecoder: JwtDecoder,
 ) {
-
     private val logger = LoggerFactory.getLogger(UserService::class.java)
     private var token: String? = null
 

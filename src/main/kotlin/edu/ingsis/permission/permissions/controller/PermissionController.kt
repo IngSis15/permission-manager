@@ -4,6 +4,8 @@ import edu.ingsis.permission.permissions.dtos.AssignPermissionDTO
 import edu.ingsis.permission.permissions.dtos.PermissionResponseDTO
 import edu.ingsis.permission.permissions.dtos.ShareDTO
 import edu.ingsis.permission.permissions.service.PermissionService
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
@@ -16,15 +18,11 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
 @RestController
 @RequestMapping("/permissions")
 class PermissionController
     @Autowired
     constructor(private val permissionService: PermissionService) {
-
         private val logger: Logger = LoggerFactory.getLogger(PermissionController::class.java)
 
         @PostMapping("/assign")
@@ -33,7 +31,9 @@ class PermissionController
             @AuthenticationPrincipal jwt: Jwt,
         ): PermissionResponseDTO {
             val userId = jwt.subject
-            logger.info("Assigning permission: userId=${userId}, snippetId=${permissionDTO.snippetId}, permissionType=${permissionDTO.permissionType}")
+            logger.info(
+                "Assigning: userId=$userId, snippetId=${permissionDTO.snippetId}, permission=${permissionDTO.permissionType}",
+            )
             return permissionService.assignPermission(userId, permissionDTO.snippetId, permissionDTO.permissionType)
         }
 
@@ -43,7 +43,7 @@ class PermissionController
             @AuthenticationPrincipal jwt: Jwt,
         ): PermissionResponseDTO {
             val userId = jwt.subject
-            logger.info("Removing permission: userId=${userId}, snippetId=$snippetId")
+            logger.info("Removing permission: userId=$userId, snippetId=$snippetId")
             return permissionService.removePermission(userId, snippetId)
         }
 
@@ -52,7 +52,7 @@ class PermissionController
             @AuthenticationPrincipal jwt: Jwt,
         ): List<PermissionResponseDTO> {
             val userId = jwt.subject
-            logger.info("Fetching permissions for userId=${userId}")
+            logger.info("Fetching permissions for userId=$userId")
             return permissionService.getPermissionsByUserId(userId)
         }
 
@@ -62,7 +62,7 @@ class PermissionController
             @AuthenticationPrincipal jwt: Jwt,
         ): PermissionResponseDTO? {
             val userId = jwt.subject
-            logger.info("Fetching permission for userId=${userId} and snippetId=$snippetId")
+            logger.info("Fetching permission for userId=$userId and snippetId=$snippetId")
             return permissionService.getPermissionByUserIdAndSnippetId(userId, snippetId)
         }
 
@@ -72,7 +72,7 @@ class PermissionController
             @AuthenticationPrincipal jwt: Jwt,
         ): List<PermissionResponseDTO> {
             val userId = jwt.subject
-            logger.info("Fetching permissions for userId=${userId} and permissionType=$permissionType")
+            logger.info("Fetching permissions for userId=$userId and permissionType=$permissionType")
             return permissionService.getPermissionsByUserIdAndPermissionType(userId, permissionType)
         }
 
@@ -91,8 +91,7 @@ class PermissionController
             @AuthenticationPrincipal jwt: Jwt,
         ): PermissionResponseDTO {
             val otherUserId = dto.userId
-            logger.info("Sharing snippet: userId=${jwt.subject}, snippetId=$snippetId, otherUserId=${otherUserId}")
+            logger.info("Sharing snippet: userId=${jwt.subject}, snippetId=$snippetId, otherUserId=$otherUserId")
             return permissionService.sharePermission(jwt.subject, otherUserId, snippetId)
         }
     }
-

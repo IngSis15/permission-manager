@@ -14,8 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 class UserController
     @Autowired
     constructor(val userService: UserService) {
-
-    private val logger = LoggerFactory.getLogger(UserController::class.java)
+        private val logger = LoggerFactory.getLogger(UserController::class.java)
 
         @GetMapping()
         fun getUsers(): ResponseEntity<List<UserDto>> {
@@ -28,6 +27,5 @@ class UserController
                 logger.error("Error retrieving users: ${e.message}", e)
                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
             }
+        }
     }
-}
-
