@@ -58,6 +58,12 @@ class PermissionService(private val permissionRepository: PermissionRepository, 
         if (permission != null) {
             permissionRepository.delete(permission)
             logger.info("Permission removed successfully: permissionId=${permission.id}")
+            if (permission.getPermissionType() == PermissionType.OWNER) {
+                val viewers = permissionRepository.findAllBySnippetIdAndPermissionType(snippetId, PermissionType.VIEWER)
+                viewers.forEach {
+                    permissionRepository.delete(it)
+                }
+            }
             return PermissionResponseDTO(
                 id = permission.id!!,
                 userId = permission.getUserId(),
