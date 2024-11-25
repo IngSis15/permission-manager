@@ -3,6 +3,7 @@ package edu.ingsis.permission.users
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import edu.ingsis.permission.users.dto.UserDto
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.security.oauth2.jwt.Jwt
@@ -19,11 +20,14 @@ class UserService(
     @Value("\${spring.security.oauth2.resourceserver.jwt.issuer-uri}") val audience: String,
     private val jwtDecoder: JwtDecoder,
 ) {
+    private val logger = LoggerFactory.getLogger(UserService::class.java)
     private var token: String? = null
 
     fun getAllUsers(): Mono<List<UserDto>> {
+        logger.info("Getting all users.")
         return validateAndRefreshTokenIfNeeded()
             .flatMap { validToken ->
+                logger.info("Using token for request.")
                 WebClient.builder()
                     .baseUrl("$audience/api/v2/users")
                     .defaultHeader("Authorization", "Bearer $validToken")
@@ -33,6 +37,8 @@ class UserService(
                     .retrieve()
                     .bodyToFlux(UserDto::class.java)
                     .collectList()
+                    .doOnTerminate { logger.info("Request to get all users completed.") }
+                    .doOnError { error -> logger.error("Error retrieving users: ${error.message}", error) }
             }
     }
 
@@ -71,8 +77,10 @@ class UserService(
 
     private fun validateAndRefreshTokenIfNeeded(): Mono<String> {
         return if (token != null && validateToken(token!!)) {
+            logger.info("Using existing valid token.")
             Mono.just(token!!)
         } else {
+            logger.info("Token is invalid or missing. Requesting a new token.")
             getToken()
         }
     }
@@ -80,13 +88,21 @@ class UserService(
     private fun validateToken(token: String): Boolean {
         return try {
             val decodedJwt: Jwt = jwtDecoder.decode(token)
-            decodedJwt.expiresAt?.isAfter(Instant.now()) ?: false
+            val isValid = decodedJwt.expiresAt?.isAfter(Instant.now()) ?: false
+            if (isValid) {
+                logger.info("Token is valid.")
+            } else {
+                logger.warn("Token has expired.")
+            }
+            isValid
         } catch (e: Exception) {
-            false // Token is invalid
+            logger.error("Error decoding token: ${e.message}", e)
+            false
         }
     }
 
     fun getUsernameFromUserId(userId: String): Mono<String> {
+        logger.info("Getting username for user ID: $userId")
         return validateAndRefreshTokenIfNeeded()
             .flatMap { validToken ->
                 WebClient.builder()
@@ -104,6 +120,8 @@ class UserService(
                             HttpStatus.NOT_FOUND, "Username not found for user ID $userId",
                         )
                     }
+                    .doOnTerminate { logger.info("Username fetch completed for user ID: $userId") }
+                    .doOnError { error -> logger.error("Error fetching username: ${error.message}", error) }
             }
     }
 }
