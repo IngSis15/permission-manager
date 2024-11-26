@@ -31,10 +31,11 @@ class PermissionController
             @AuthenticationPrincipal jwt: Jwt,
         ): PermissionResponseDTO {
             val userId = jwt.subject
+            val username = jwt.claims["user/email"] as String
             logger.info(
-                "Assigning: userId=$userId, snippetId=${permissionDTO.snippetId}, permission=${permissionDTO.permissionType}",
+                "Assigning: userId=${jwt.subject}, snippetId=${permissionDTO.snippetId}, permission=${permissionDTO.permissionType}",
             )
-            return permissionService.assignPermission(userId, permissionDTO.snippetId, permissionDTO.permissionType)
+            return permissionService.assignPermission(userId, username, permissionDTO.snippetId, permissionDTO.permissionType)
         }
 
         @DeleteMapping("/user/snippet/{snippetId}")
@@ -90,8 +91,10 @@ class PermissionController
             @RequestBody dto: ShareDTO,
             @AuthenticationPrincipal jwt: Jwt,
         ): PermissionResponseDTO {
+            val userId = jwt.subject
+            val username = jwt.claims["user/email"] as String
             val otherUserId = dto.userId
             logger.info("Sharing snippet: userId=${jwt.subject}, snippetId=$snippetId, otherUserId=$otherUserId")
-            return permissionService.sharePermission(jwt.subject, otherUserId, snippetId)
+            return permissionService.sharePermission(userId, username, otherUserId, snippetId)
         }
     }

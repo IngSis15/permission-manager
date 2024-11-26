@@ -55,6 +55,7 @@ class PermissionE2ETests() {
                 .header("alg", "none")
                 .claim(JwtClaimNames.SUB, "test-user")
                 .claim("scope", "read:snippets write:snippets")
+                .claim("user/email", "test-user@example.com")
                 .issuedAt(Instant.now())
                 .expiresAt(Instant.now().plusSeconds(3600))
                 .build()
