@@ -17,6 +17,7 @@ class PermissionService(private val permissionRepository: PermissionRepository, 
 
     fun assignPermission(
         userId: String,
+        username: String,
         snippetId: Long,
         permissionType: String,
     ): PermissionResponseDTO {
@@ -27,14 +28,12 @@ class PermissionService(private val permissionRepository: PermissionRepository, 
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "Snippet already has an owner")
         }
 
-        val username = userService.getUsernameFromUserId(userId)
-
         val permission =
             Permission(
                 userId = userId,
                 snippetId = snippetId,
                 permissionType = PermissionType.valueOf(permissionType),
-                username = username.block()!!,
+                username = username,
             )
         val savedPermission = permissionRepository.save(permission)
         logger.info("Permission assigned successfully: permissionId=${savedPermission.id}")
@@ -155,12 +154,13 @@ class PermissionService(private val permissionRepository: PermissionRepository, 
 
     fun sharePermission(
         userId: String,
+        username: String,
         otherUserId: String,
         snippetId: Long,
     ): PermissionResponseDTO {
         logger.info("Sharing permission: userId=$userId, otherUserId=$otherUserId, snippetId=$snippetId")
         if (isOwner(userId, snippetId)) {
-            return assignPermission(otherUserId, snippetId, "VIEWER")
+            return assignPermission(otherUserId, username, snippetId, "VIEWER")
         }
         logger.warn("UserId=$userId is not the owner of snippetId=$snippetId")
         throw ResponseStatusException(HttpStatus.FORBIDDEN, "You are not the owner of the snippet")
