@@ -1,4 +1,4 @@
-package edu.ingsis.snippetmanager.server
+package edu.ingsis.permission.server
 
 import jakarta.servlet.Filter
 import jakarta.servlet.FilterChain
